@@ -1,6 +1,6 @@
 {
   "name": "lobo-irl",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Queries live data from the Land/Ocean Biogeochemical Observatory sensors operating in the Indian River Lagoon.",
   "main": "index.js",
   "scripts": {

@@ -4,10 +4,13 @@
  * MIT License
  */
 
-var config  = require('config'),
+var yaml    = require('js-yaml'),
+    fs      = require('fs'),
     request = require('superagent'),
     xml2js  = require('xml2js'),
     _       = require('lodash');
+
+var config = yaml.safeLoad(fs.readFileSync('./configuration.yaml', 'utf8'));
 
 // hash table for getting the data name.
 var measurementNames = {};
@@ -163,9 +166,3 @@ exports.getMeasurements = function () {
 exports.getMeasurement = function (key) {
     return config.measurements[key];
 };
-
-/*exports.getSensorData('IRL-JB', function (err, result) {
-    console.log(result);
-});*/
-
-console.log(exports.getMeasurements());
