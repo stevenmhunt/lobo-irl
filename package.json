@@ -1,0 +1,29 @@
+{
+  "name": "lobo-irl",
+  "version": "0.0.1",
+  "description": "Queries live data from the Land/Ocean Biogeochemical Observatory sensors operating in the Indian River Lagoon.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevenmhunt/lobo-irl.git"
+  },
+  "keywords": [
+    "lobo",
+    "fau",
+    "sensor",
+    "environment",
+    "data",
+    "lagoon",
+    "weather",
+    "water"
+  ],
+  "author": "Steven Hunt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stevenmhunt/lobo-irl/issues"
+  },
+  "homepage": "https://github.com/stevenmhunt/lobo-irl#readme"
+}
