@@ -27,6 +27,8 @@
   },
   "homepage": "https://github.com/stevenmhunt/lobo-irl#readme",
   "dependencies": {
+    "config": "^1.21.0",
+    "js-yaml": "^3.6.1",
     "lodash": "^4.13.1",
     "superagent": "^2.1.0",
     "xml2js": "^0.4.17"
