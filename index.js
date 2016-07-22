@@ -10,7 +10,7 @@ var yaml    = require('js-yaml'),
     xml2js  = require('xml2js'),
     _       = require('lodash');
 
-var config = yaml.safeLoad(fs.readFileSync('./configuration.yaml', 'utf8'));
+var config = yaml.safeLoad(fs.readFileSync(__dirname + '/configuration.yaml', 'utf8'));
 
 // hash table for getting the data name.
 var measurementNames = {};
