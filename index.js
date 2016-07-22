@@ -1,21 +1,24 @@
 
-var request = require('superagent');
-var xml2js = require('xml2js');
+var request = require('superagent'),
+    xml2js  = require('xml2js'),
+    _       = require('lodash');
 
-var sensors = [
-    'IRL-FP',
-    'IRL-HB',
-    'IRL-LP',
-    'IRL-SB',
-    'IRL-VB',
-    'IRL-JB',
-    'IRL-SLE',
-    'SLE-ME',
-    'SLE-NF',
-    'SLE-SF'
-];
+/**
+ * @private
+ * Lists all available measurement types and their information.
+ * All data sourced from http://fau.loboviz.com
+ */
+var measurements = {
+    temperature: {  },
+    salinity: { }
+};
 
-var sensorInfo = {
+/**
+ * @private
+ * Lists all sensors in the network and their information.
+ * All data sourced from http://fau.loboviz.com
+ */
+var sensors = {
     'IRL-FP': {
         url: 'http://fau.loboviz.com/0054.wml',
         description: 'Indian River Lagoon - Fort Pierce',
@@ -61,4 +64,37 @@ var sensorInfo = {
         description: 'St. Lucie Estuary-South Fork',
         location: { lat: 27.187789, lng: -80.264180 }
     }
+};
+
+/**
+ * Returns a list of sensors.
+ * @param minLat (Optional) The minimum latitude.
+ * @param maxLat (Optional) The maximum latitude.
+ * @param minLng (Optional) The minimum longitude.
+ * @param maxLng (Optional) The maximum longitude.
+ * @returns {Array} The collection of sensor names within the given area.
+ */
+exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
+    if (minLat && maxLat && minLng && maxLng) {
+        var result = [];
+        for (var sensor in sensors) {
+            if (sensors.hasOwnProperty(sensor)) {
+                if (sensor.location.lat >= minLat &&
+                    sensor.location.lat <= maxLat &&
+                    sensor.location.lng >= minLng &&
+                    sensor.location.lng <= maxLng) {
+                    result.push(sensor);
+                }
+            }
+        }
+        return result;
+    }
+    return _(sensors).keys();
+};
+
+exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
+};
+
+exports.getSensorInfo = function (sensor) {
+    return sensors[sensor];
 };
