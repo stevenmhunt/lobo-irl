@@ -8,8 +8,10 @@ var yaml    = require('js-yaml'),
     fs      = require('fs'),
     request = require('superagent'),
     xml2js  = require('xml2js'),
+    Promise = require('bluebird'),
     _       = require('lodash');
 
+// load the sensor and measurement configuration from the YAML file bundled with the package.
 var config = yaml.safeLoad(fs.readFileSync(__dirname + '/configuration.yaml', 'utf8'));
 
 // hash table for getting the data name.
@@ -26,24 +28,13 @@ _.keys(config.measurements).forEach(function (key) {
  * @param [maxLat] {float} The maximum latitude.
  * @param [minLng] {float} The minimum longitude.
  * @param [maxLng] {float} The maximum longitude.
- * @returns {Array} The collection of sensor names within the given area.
+ * @returns {Array} The collection of sensor names.
  */
 exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
 
-    // if a geographic box is defined, limit by lat/lon bounds.
+    // if an area is defined, limit by lat/lng bounds.
     if (minLat && maxLat && minLng && maxLng) {
-        var result = [];
-        for (var sensor in config.sensors) {
-            if (config.sensors.hasOwnProperty(sensor)) {
-                if (sensor.location.lat >= minLat &&
-                    sensor.location.lat <= maxLat &&
-                    sensor.location.lng >= minLng &&
-                    sensor.location.lng <= maxLng) {
-                    result.push(sensor);
-                }
-            }
-        }
-        return result;
+        return getSensorsByArea(minLat, maxLat, minLng, maxLng);
     }
 
     // otherwise, just return the full list of keys.
@@ -51,22 +42,146 @@ exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
 };
 
 /**
+ * @private
+ * Gets the sensors within a specified area.
+ * @param minLat {float} The minimum latitude.
+ * @param maxLat {float} The maximum latitude.
+ * @param minLng {float} The minimum longitude.
+ * @param maxLng {float} The maximum longitude.
+ * @returns {Array} The collection of sensor names within the given area.
+ */
+function getSensorsByArea(minLat, maxLat, minLng, maxLng) {
+    var result = [];
+    for (var key in config.sensors) {
+        if (config.sensors.hasOwnProperty(key)) {
+            var sensor = config.sensors[key];
+            if (sensor.location.lat >= minLat &&
+                sensor.location.lat <= maxLat &&
+                sensor.location.lng >= minLng &&
+                sensor.location.lng <= maxLng) {
+                result.push(key);
+            }
+        }
+    }
+    return result;
+}
+
+/**
  * Gets detailed information about a specific sensor.
  * @param key {string} The sensor name.
  * @returns {Object} Information about the sensor.
  */
 exports.getSensor = function (key) {
-    return config.sensors[key];
+    return config.sensors[key] || null;
 };
+
+/**
+ * Queries the given sensor for the latest measurements.
+ * @param [key] {string} The sensor key.
+ * @param [callback] {function(err, result)} A callback.
+ * @param [noCache] {boolean} Indicates whether or not to allow caching of responses.
+ * @returns {Promise} A promise object for when the data is queried.
+ */
+exports.getSensorData = function (sensor, callback, noCache) {
+
+    // the first parameter is optional, so shift if not provided.
+    // this is JavaScript faux method overloading.
+    if (sensor && !callback && typeof sensor === 'function') {
+        noCache = callback;
+        callback = sensor;
+        sensor = null;
+    }
+
+    var promise = null;
+
+    // if a specific sensor is requested, just return the data for that sensor.
+    if (sensor) {
+        promise = getSensorData(sensor, noCache);
+    }
+    else {
+        // otherwise query the data for all sensors.
+        promise = Promise.all(exports.getSensors().map(function (sensor) {
+            return getSensorData(sensor, noCache);
+        }));
+    }
+
+    // if there is a callback provided, call it.
+    if (callback && typeof callback === 'function') {
+        promise.then(
+            function (result) { callback(null, result); },
+            function (err) { callback(err, null); }
+        );
+    }
+
+    // always return the promise object.
+    return promise;
+};
+
+/**
+ * @private
+ * Given a sensor key, queries the sensor and parses the result to return an object containing the latest measurements.
+ * @param sensor {string} The sensor key.
+ * @param [noCache] {boolean} Indicates whether or not to allow caching of responses.
+ * @returns {Promise} A promise object for when the data has been queried and processed.
+ */
+function getSensorData(sensor, noCache) {
+    return new Promise(function (resolve, reject) {
+
+        // get the sensor details.
+        var sensorInfo = exports.getSensor(sensor);
+
+        // use the url to query the sensor.
+        sendSensorRequest(sensorInfo.url, noCache).then(function (text) {
+            // then process the sensor data.
+            processSensorData(sensor, text, resolve, reject);
+        }).catch(reject);
+    });
+}
+
+// caches requests to avoid re-querying data.
+var requestCache = {};
+
+/**
+ *
+ * @param url {string} The url to use when querying the sensor.
+ * @param [noCache] {boolean} Indicates whether or not to allow caching of responses.
+ * @returns {Promise} A promise for when the request has been completed.
+ */
+function sendSensorRequest(url, noCache) {
+    return new Promise(function (resolve, reject) {
+
+        // check the cache first if no-cache is off.
+        if (!noCache && requestCache[url]) {
+            resolve(requestCache[url]);
+        }
+        else {
+            // perform the request.
+            request.get(url)
+                .send()
+                .end(function (err, res) {
+                    if (err || !res || !res.text) { reject(err); }
+                    else {
+                        resolve(res.text);
+
+                        // cache the result if allowed.
+                        if (!noCache) {
+                            requestCache[url] = res.text;
+                        }
+                    }
+                });
+        }
+    });
+}
 
 /**
  * @private
  * Processes the data for the given sensor.
  * @param sensor {string} The sensor key.
  * @param text {string} The raw sensor data.
- * @param callback {function(err,result)} A callback.
+ * @param resolve {function(result)} A resolve callback.
+ * @param reject {function(err)} A reject callback.
  */
-function processSensorData(sensor, text, callback) {
+function processSensorData(sensor, text, resolve, reject) {
 
     var resultLines = [],
         resultMeasurements = [],
@@ -115,40 +230,12 @@ function processSensorData(sensor, text, callback) {
     }
 
     // report back on the data.
-    callback(null, {
+    resolve({
         sensor: sensor,
         dateTime: time,
         data: result
     });
 }
-
-/**
- * Queries the given sensor for the latest measurements.
- * @param key {string} The sensor key.
- * @param callback {function(err, result)} A callback.
- */
-exports.getSensorData = function (sensor, callback) {
-
-    var sensorInfo = exports.getSensor(sensor);
-
-    request
-        .get(sensorInfo.url)
-        .send()
-        .end(function(err, res) {
-
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            try {
-                processSensorData(sensor, res.text, callback);
-            }
-            catch (err) {
-                callback(err);
-            }
-        });
-};
 
 /**
  * Gets a list of supported measurements.
@@ -164,5 +251,5 @@ exports.getMeasurements = function () {
  * @returns {Object} Information about the measurement.
  */
 exports.getMeasurement = function (key) {
-    return config.measurements[key];
+    return config.measurements[key] || null;
 };
