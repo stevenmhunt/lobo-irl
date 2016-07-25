@@ -116,7 +116,7 @@ describe('lobo-irl library', function () {
 
     describe('getSensorData', function () {
 
-        it('should query a single sensor and return measurements from it if it exists.', function (done) {
+        it('should query a single sensor and return a measurement if it exists.', function (done) {
 
             this.timeout(30000);
 
@@ -129,7 +129,7 @@ describe('lobo-irl library', function () {
             }).done(null, done);
         });
 
-        it('should query a all sensors and return measurements from it if no sensor is provided.', function (done) {
+        it('should query all sensors and return measurements if no sensor is provided.', function (done) {
 
             this.timeout(30000);
 
