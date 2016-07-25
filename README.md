@@ -16,28 +16,28 @@ Retrieving a list of available sensors.
 
 ```js
 var api = require('lobo-irl');
-console.log(api.getSensors());
+var result = api.getSensors();
 ```
 
 Retrieving a list of available measurements.
 
 ```js
 var api = require('lobo-irl');
-console.log(api.getMeasurements());
+var result = api.getMeasurements();
 ```
 
 Retrieving information about a specific sensor.
 
 ```js
 var api = require('lobo-irl');
-console.log(api.getSensor('IRL-JB'));
+var result = api.getSensor('IRL-JB');
 ```
 
 Retrieving information about a specific measurement.
 
 ```js
 var api = require('lobo-irl');
-console.log(api.getMeasurement('temperature'));
+var result = api.getMeasurement('temperature');
 ```
 
 Query live data from a specific sensor.
@@ -45,7 +45,16 @@ Query live data from a specific sensor.
 ```js
 var api = require('lobo-irl');
 api.getSensorData('IRL-JB', function (err, result) {
-    console.log(result);
+    ...
+});
+```
+
+The `getSensorData` method also supports promises.
+
+```js
+var api = require('lobo-irl');
+api.getSensorData('IRL-JB').then(function (result) {
+    ...
 });
 ```
 

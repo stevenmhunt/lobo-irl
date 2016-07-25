@@ -63,7 +63,7 @@ exports.getSensorsByArea = function (minLat, maxLat, minLng, maxLng) {
  */
 exports.getSensor = function (key) {
     return config.sensors[key] || null;
-}
+};
 
 /**
  * @private
@@ -84,7 +84,7 @@ exports.getSensorData = function (sensor, noCache) {
             processSensorData(sensor, text, resolve, reject);
         }).catch(reject);
     });
-}
+};
 
 // caches requests to avoid re-querying data.
 var requestCache = {};
@@ -137,27 +137,45 @@ function processSensorData(sensor, text, resolve, reject) {
         time = null,
         measurements = measurementsLib.getMeasurements();
 
+    // a collection of parsing strategies to use on the file.
+    var parsers = [
+        {
+            // example:
+            // <p>2016-07-22 09:00:00 EST</p>
+            condition: function (line) { return line.indexOf('<p>') === 0 && line.indexOf(':') > 0; },
+            run: function (line) {
+                time = line
+                    .replace('/p', 'p')
+                    .replace(/<p>/g, '');
+            }
+        },
+        {
+            // everything else.
+            condition: function () { return true; },
+            run: function (line) {
+                // for each line look for the measurement name at the beginning of the line.
+                // note: every() will exit if the function returns false, whereas forEach will not exit the loop.
+                measurements.every(function (key) {
+                    if (line.indexOf(measurementNames[key] + ": ") === 0) {
+                        resultLines.push(line);
+                        resultMeasurements.push(key);
+                        return false; // stop looping if we found the match.
+                    }
+                    return true;
+                });
+            }
+        }
+    ];
+
     // split the result by line
     text.split("\n").forEach(function (line) {
-
-        // example:
-        // <p>2016-07-22 09:00:00 EST</p>
-        if (line.indexOf('<p>') === 0 && line.indexOf(':') > 0) {
-            time = line
-                .replace('/p', 'p')
-                .replace(/<p>/g, '');
-        }
-        else {
-            // for each line look for the measurement name at the beginning of the line.
-            measurements.every(function (key) {
-                if (line.indexOf(measurementNames[key] + ": ") === 0) {
-                    resultLines.push(line);
-                    resultMeasurements.push(key);
-                    return false; // stop looping if we found the match.
-                }
-                return true;
-            });
-        }
+        parsers.every(function (parser) {
+            if (parser.condition(line)) {
+                parser.run(line);
+                return false;
+            }
+            return true;
+        });
     });
 
     // Example line:

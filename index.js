@@ -48,7 +48,7 @@ exports.getSensorData = function (sensor, callback, noCache) {
 
     // the first parameter is optional, so shift if not provided.
     // this is JavaScript faux method overloading.
-    if (sensor && !callback && typeof sensor === 'function') {
+    if (sensor && noCache === undefined && typeof sensor === 'function') {
         noCache = callback;
         callback = sensor;
         sensor = null;

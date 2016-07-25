@@ -5,7 +5,7 @@ var expect = require("chai").expect,
     _      = require('lodash'),
     api    = require('../index');
 
-var config = yaml.safeLoad(fs.readFileSync(__dirname + '/configuration.yaml', 'utf8'));
+var config = require('../utils').loadConfig();
 
 describe('lobo-irl library', function () {
 
