@@ -1,14 +1,12 @@
-/*
+/**************************************************
  * Lobo - Indian River Lagoon Client
  * Written by Steven Hunt
  * MIT License
- */
+ **************************************************/
 
-var _ = require('lodash');
-
-var utils = require('./utils');
-
-var config = utils.loadConfig();
+var _      = require('lodash'),
+    utils  = require('./utils'),
+    config = utils.loadConfig();
 
 /**
  * @private

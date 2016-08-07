@@ -1,10 +1,10 @@
 {
   "name": "lobo-irl",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Queries live data from the Land/Ocean Biogeochemical Observatory sensors operating in the Indian River Lagoon.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "./node_modules/.bin/jshint --reporter=node_modules/jshint-stylish *.js & ./node_modules/.bin/mocha --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,8 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "jshint": "^2.9.2",
+    "jshint-stylish": "^2.2.0",
     "mocha": "^2.5.3"
   }
 }

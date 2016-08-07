@@ -1,11 +1,15 @@
+/**************************************************
+ * Lobo - Indian River Lagoon Client
+ * Written by Steven Hunt
+ * MIT License
+ **************************************************/
 
 var expect = require("chai").expect,
     fs     = require('fs'),
     yaml   = require('js-yaml'),
     _      = require('lodash'),
-    api    = require('../index');
-
-var config = require('../utils').loadConfig();
+    api    = require('../index'),
+    config = require('../utils').loadConfig();
 
 describe('lobo-irl library', function () {
 
@@ -56,8 +60,7 @@ describe('lobo-irl library', function () {
                 }
             };
 
-            var expected = "IRL-SB",
-                actual = api.getSensors(box.lat.min, box.lat.max, box.lng.min, box.lng.max);
+            var actual = api.getSensors(box.lat.min, box.lat.max, box.lng.min, box.lng.max);
 
             expect(actual).to.be.empty;
         });
@@ -79,9 +82,8 @@ describe('lobo-irl library', function () {
             var result = api.getSensor('NOT A SENSOR');
 
             expect(result).to.be.null;
-        })
-
-    })
+        });
+    });
     
     describe('getMeasurements', function () {
 
@@ -110,9 +112,8 @@ describe('lobo-irl library', function () {
             var result = api.getMeasurement('NOT A SENSOR');
 
             expect(result).to.be.null;
-        })
-
-    })
+        });
+    });
 
     describe('getSensorData', function () {
 

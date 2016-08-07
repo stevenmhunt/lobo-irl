@@ -1,13 +1,12 @@
-/*
+/**************************************************
  * Lobo - Indian River Lagoon Client
  * Written by Steven Hunt
  * MIT License
- */
+ **************************************************/
 
-var Promise = require('bluebird');
-
-var sensorsLib = require('./sensors'),
-    measurementsLib = require('./measurements');
+var Promise  = require('bluebird'),
+    sensors  = require('./sensors'),
+    measures = require('./measurements');
 
 /**
  * Returns a list of sensors.
@@ -21,11 +20,11 @@ exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
 
     // if an area is defined, limit by lat/lng bounds.
     if (minLat && maxLat && minLng && maxLng) {
-        return sensorsLib.getSensorsByArea(minLat, maxLat, minLng, maxLng);
+        return sensors.getSensorsByArea(minLat, maxLat, minLng, maxLng);
     }
 
     // otherwise, just return the full list of keys.
-    return sensorsLib.getSensors();
+    return sensors.getSensors();
 };
 
 /**
@@ -34,12 +33,12 @@ exports.getSensors = function (minLat, maxLat, minLng, maxLng) {
  * @returns {Object} Information about the sensor.
  */
 exports.getSensor = function (key) {
-    return sensorsLib.getSensor(key);
+    return sensors.getSensor(key);
 };
 
 /**
  * Queries the given sensor for the latest measurements.
- * @param [key] {string} The sensor key.
+ * @param [sensor] {string} The sensor key.
  * @param [callback] {function(err, result)} A callback.
  * @param [noCache] {boolean} Indicates whether or not to allow caching of responses.
  * @returns {Promise} A promise object for when the data is queried.
@@ -47,7 +46,6 @@ exports.getSensor = function (key) {
 exports.getSensorData = function (sensor, callback, noCache) {
 
     // the first parameter is optional, so shift if not provided.
-    // this is JavaScript faux method overloading.
     if (sensor && noCache === undefined && typeof sensor === 'function') {
         noCache = callback;
         callback = sensor;
@@ -58,20 +56,19 @@ exports.getSensorData = function (sensor, callback, noCache) {
 
     // if a specific sensor is requested, just return the data for that sensor.
     if (sensor) {
-        promise = sensorsLib.getSensorData(sensor, noCache);
+        promise = sensors.getSensorData(sensor, noCache);
     }
     else {
         // otherwise query the data for all sensors.
-        promise = Promise.all(exports.getSensors().map(function (sensor) {
-            return sensorsLib.getSensorData(sensor, noCache);
-        }));
+        promise = Promise.all(exports.getSensors()
+                .map(sensor => sensors.getSensorData(sensor, noCache)));
     }
 
     // if there is a callback provided, call it.
     if (callback && typeof callback === 'function') {
         promise.then(
-            function (result) { callback(null, result); },
-            function (err) { callback(err, null); }
+            result => callback(null, result),
+            err => callback(err, null)
         );
     }
 
@@ -84,7 +81,7 @@ exports.getSensorData = function (sensor, callback, noCache) {
  * @returns {Array} A list of measurements.
  */
 exports.getMeasurements = function () {
-    return measurementsLib.getMeasurements();
+    return measures.getMeasurements();
 };
 
 /**
@@ -93,5 +90,5 @@ exports.getMeasurements = function () {
  * @returns {Object} Information about the measurement.
  */
 exports.getMeasurement = function (key) {
-    return measurementsLib.getMeasurement(key);
+    return measures.getMeasurement(key);
 };
